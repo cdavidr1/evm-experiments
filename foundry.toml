@@ -1,6 +1,11 @@
 [profile.default]
-src = "src"
-out = "out"
-libs = ["lib"]
+src = 'src'
+out = 'out'
+libs = ['lib']
+solc = "0.8.17"
 
+[etherscan]
+goerli = { key = "S4DKDUPVQTC273I9U5PBNUC9B8I6SVSNGX" }
+
+# solc_version...
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
