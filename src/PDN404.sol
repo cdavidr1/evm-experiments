@@ -15,6 +15,7 @@ import {MerkleProofLib} from "solady/utils/MerkleProofLib.sol";
  * Each address is limited to MAX_PER_WALLET total mints.
  */
 contract PDN404 is DN404, Ownable {
+
     string private _name;
     string private _symbol;
     string private _baseURI;
