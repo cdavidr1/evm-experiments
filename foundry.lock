@@ -1,0 +1,8 @@
+{
+  "lib/dn404": {
+    "rev": "6f5c65dab643d59f7de1ed5155084f47a2bba82e"
+  },
+  "lib/forge-std": {
+    "rev": "ae570fec082bfe1c1f45b0acca4a2b4f84d345ce"
+  }
+}
