@@ -1,4 +1,10 @@
 {
+  "lib/ERC721A": {
+    "tag": {
+      "name": "v4.3.0",
+      "rev": "6f8a82a7b2833ad8b2fc7b54349281143a731fdd"
+    }
+  },
   "lib/forge-std": {
     "rev": "ae570fec082bfe1c1f45b0acca4a2b4f84d345ce"
   },
