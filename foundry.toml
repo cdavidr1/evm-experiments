@@ -2,7 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-remappings = ['solady/=lib/solady/src/','ERC721A/=lib/ERC721A/contracts/']
+remappings = ['solady/=lib/solady/src/','ERC721A/=lib/ERC721A/contracts/',"@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/src/v0.8/"]
 solc = "0.8.24"
 
 # solc_version...

@@ -7,6 +7,7 @@ import {LibString} from "solady/utils/LibString.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {ReentrancyGuardTransient} from "solady/utils/ReentrancyGuardTransient.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
 
 contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -54,7 +55,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
     bytes32 public whiteMerkleRoot;
 
     /// @notice The sale phase enum.
-    /// 0 - Closed, 1 - Og Phase 1, 2 - White Phase 2, 3 - Public Sale
+    /// 0 - Closed, 1 - Og Phase, 2 - White Phase, 3 - Public Sale
     enum SalePhase {
         Closed,
         OgList,
@@ -69,8 +70,12 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
     /// @dev Maximum number of tokens mintable.
     uint64 public constant MAX_MINT = 5;
 
-    /// @dev The baseURI for a token.
-    string internal baseURI;
+    /// @dev The baseUri for a token.
+    string internal baseUri;
+
+    // BTC / USD Feed on Monad
+    address public constant BTC_USD_FEED =
+        0xc1d4C3331635184fA4C3c22fb92211B2Ac9E0546;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                        CONSTRUCTOR                         */
@@ -82,6 +87,18 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
         mintPrice = 0.05 ether;
         salePhase = SalePhase.Closed;
         _initializeOwner(msg.sender);
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                         CHAINLINK                          */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    function getBtcPrice() public view returns (int256) {
+        // Pretty standard: roundId, answer, startedAt, updatedAt, answeredInRound
+        (, int256 price, , , ) = AggregatorV3Interface(BTC_USD_FEED)
+            .latestRoundData();
+
+        return price;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -102,9 +119,9 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
         mintPrice = _price;
     }
 
-    /// @notice Update the baseURI for a token.
-    function setBaseURI(string memory _baseURI) external onlyOwner {
-        baseURI = _baseURI;
+    /// @notice Update the baseUri for a token.
+    function setBaseURI(string memory _baseUri) external onlyOwner {
+        baseUri = _baseUri;
     }
 
     /// @notice Set the active sale phase.
@@ -137,12 +154,12 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
         if (_exists(id) == false) {
             revert TokenDoesNotExist();
         }
-        return LibString.concat(baseURI, LibString.toString(id));
+        return LibString.concat(baseUri, LibString.toString(id));
     }
 
     /// @notice og mint to `msg.sender`.
     function ogMint(
-        uint256 quantity,
+        uint64 quantity,
         bytes32[] calldata _proof
     ) external payable nonReentrant {
         // Ensure quantity is within allowed limit
@@ -176,7 +193,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
                 }
 
                 // Update the mint count for this address
-                _setAux(msg.sender, mintedCount + uint64(quantity));
+                _setAux(msg.sender, mintedCount + quantity);
 
                 // Mint `quantity` Pepega
                 _safeMint(msg.sender, quantity);
@@ -188,7 +205,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
 
     /// @notice white mint to `msg.sender`.
     function whiteMint(
-        uint256 quantity,
+        uint64 quantity,
         bytes32[] calldata _proof
     ) external payable nonReentrant {
         // Ensure quantity is within allowed limit
@@ -222,7 +239,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
                 }
 
                 // Update the mint count for this address
-                _setAux(msg.sender, mintedCount + uint64(quantity));
+                _setAux(msg.sender, mintedCount + quantity);
 
                 // Mint `quantity` Pepega
                 _safeMint(msg.sender, quantity);
@@ -237,7 +254,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
     /// - The public sale has started.
     /// - The `msg.value` is correct.
     /// - Only allows up to 5 mint per address.
-    function publicMint(uint256 quantity) external payable nonReentrant {
+    function publicMint(uint64 quantity) external payable nonReentrant {
         // Ensure quantity is within allowed limit
         if (quantity == 0 || quantity > MAX_MINT) revert InvalidQuantity();
         if (salePhase != SalePhase.Public) revert NotStarted();
@@ -256,7 +273,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
             if (msg.value != (mintPrice * quantity)) revert IncorrectPrice();
 
             // Update the mint count for this address
-            _setAux(msg.sender, mintedCount + uint64(quantity));
+            _setAux(msg.sender, mintedCount + quantity);
 
             // Mint `quantity` Pepega
             _safeMint(msg.sender, quantity);
