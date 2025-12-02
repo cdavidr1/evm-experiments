@@ -2,14 +2,15 @@ pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {NFT} from "../src/NFT.sol";
-
+import {Deploy} from "../script/VMFoundryDeploy.s.sol";
 contract NFTTest is Test {
     uint64 num = 1;
     NFT testNft;
 
     function setUp() external {
+        Deploy deployer = new Deploy();
         console.log("[Set Up--");
-        testNft = new NFT();
+        testNft = deployer.run();
         console.log("--End Set Up]");
     }
 
@@ -24,7 +25,7 @@ contract NFTTest is Test {
     }
 
     function testOwnerMsgSender() public {
-        assertEq(testNft.owner(), address(this)); // this is the expected msg.sender within tests
+        assertEq(testNft.owner(), address(msg.sender));
     }
 
     function testGetBtcPriceFromChainlink() public {
@@ -35,6 +36,5 @@ contract NFTTest is Test {
         string memory scaledStr = vm.toString(uint256(price) / 1e8);
         console.log("Current BTC Price (Scaled):%s", scaledStr);
         assertGt(price, 0, "BTC price should be > 0");
-        console.log("Did we get here?");
     }
 }

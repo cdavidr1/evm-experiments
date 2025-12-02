@@ -77,16 +77,20 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
     address public constant BTC_USD_FEED =
         0xc1d4C3331635184fA4C3c22fb92211B2Ac9E0546;
 
+    AggregatorV3Interface private s_priceFeed;
+
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                        CONSTRUCTOR                         */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    constructor() ERC721A(name(), symbol()) {
+    constructor(address priceFeed) ERC721A(name(), symbol()) {
         ogMerkleRoot = 0x8cfced217f43531ef98b85c09752bf88fb067f751fddcc62c334df07d7dc5559;
         whiteMerkleRoot = 0xbba0b526b0ada9d54799475bd1ff24765bfcf57c30bd14bebe90274bbcb95bbf;
         mintPrice = 0.05 ether;
         salePhase = SalePhase.Closed;
         _initializeOwner(msg.sender);
+
+        s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -95,8 +99,7 @@ contract NFT is Ownable, ReentrancyGuardTransient, ERC721A {
 
     function getBtcPrice() public view returns (int256) {
         // Pretty standard: roundId, answer, startedAt, updatedAt, answeredInRound
-        (, int256 price, , , ) = AggregatorV3Interface(BTC_USD_FEED)
-            .latestRoundData();
+        (, int256 price, , , ) = s_priceFeed.latestRoundData();
 
         return price;
     }
